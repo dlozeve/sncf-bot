@@ -21,13 +21,15 @@
    (let* ((options (getopt-parse gopt args))
 	  (sncf-key (hash-ref options 'sncf-key))
 	  (mattermost-url (hash-ref options 'mattermost-url))
-	  (mattermost-channel (hash-ref options 'mattermost-channel))
-	  (departures (get-next-departures sncf-key)))
-     (display-departures-table departures)
-     (def tab-str-md
-       (with-output-to-string (lambda () (display-departures-table-md departures))))
-     (if mattermost-url
-       (post-to-mattermost mattermost-url tab-str-md channel: mattermost-channel)))
+	  (mattermost-channel (hash-ref options 'mattermost-channel)))
+     (let-values (((departures disruptions) (get-departures sncf-key)))
+       (display-departures-table departures)
+       (display-disruptions disruptions)
+       (when mattermost-url
+	 (let ((tab-str-md (with-output-to-string (lambda ()
+						    (display-departures-table-md departures)
+						    (display-disruptions disruptions)))))
+	   (post-to-mattermost mattermost-url tab-str-md channel: mattermost-channel)))))
    (catch (getopt-error? exn)
      (getopt-display-help exn "sncf" (current-error-port))
      (exit 1))
@@ -35,10 +37,12 @@
      (display (error-message exn) (current-error-port))
      (exit 1))))
 
-(def (get-next-departures sncf-key)
+(def (get-departures sncf-key)
   (def req (http-get +sncf-url+ headers: `(("Authorization" . ,sncf-key))))
   (if (eq? 200 (request-status req))
-    (hash-ref (request-json req) 'departures)
+    (let (req-json (request-json req))
+      (values (hash-ref req-json 'departures)
+	      (hash-ref req-json 'disruptions)))
     (begin (display (format "Failed to query the SNCF API: ~a ~a\n"
 			    (request-status req) (request-status-text req)))
 	   (exit 1))))
@@ -83,6 +87,12 @@
 		       (hash-ref info 'network)
 		       (hash-ref info 'direction)
 		       hour-str)))))
+
+(def (display-disruptions disruptions)
+  (displayln "Perturbations :")
+  (for ((dis disruptions))
+    (display "* ")
+    (displayln (hash-ref (car (hash-ref dis 'messages)) 'text))))
 
 (def (post-to-mattermost url text channel: (channel #f))
   (def data (list->hash-table `((text . ,text))))
