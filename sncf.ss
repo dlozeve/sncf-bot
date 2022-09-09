@@ -80,7 +80,8 @@
   (display (table-footer tab)))
 
 (def (display-disruptions disruptions style: (style 'unicode))
-  (displayln "Perturbations :")
+  (unless (null? disruptions)
+    (displayln "Perturbations :"))
   (for ((dis disruptions))
     (if (eq? style 'markdown)
       (display "* ")
