@@ -5,11 +5,12 @@
 Get an access to the [[https://www.digital.sncf.com/startup/api][SNCF API]]. By creating an account, you should
 receive an email with your authentication key.
 
-You can now call the program with the authentication key as the first
-argument.
+The program reads the authentication key from the =SNCF_AUTH_KEY=
+environment variable.
 
 #+begin_src sh
-$ sncf <sncf-key>
+$ export SNCF_AUTH_KEY=<sncf-key>
+$ sncf
 ┌────────────┬────────────────────────────────┬───────────────┐
 │ Réseau     │ Direction                      │ Heure         │
 ├────────────┼────────────────────────────────┼───────────────┤

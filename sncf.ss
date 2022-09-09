@@ -15,14 +15,22 @@
 (def +sncf-url+ "https://api.sncf.com/v1/coverage/sncf/stop_areas/stop_area:SNCF:87415604/departures")
 
 (def (main . args)
-  (def gopt (getopt (argument 'sncf-key help: "SNCF API authentication key.")
+  (def gopt (getopt (flag 'help "-h" "--help" help: "Display this help.")
 		    (option 'mattermost-url "--mattermost-url" help: "Mattermost incoming webhook URL.")
 		    (option 'mattermost-channel "--channel" help: "Mattermost channel.")))
   (try
    (let* ((options (getopt-parse gopt args))
-	  (sncf-key (hash-ref options 'sncf-key))
+	  (help (hash-ref options 'help #f))
 	  (mattermost-url (hash-ref options 'mattermost-url))
 	  (mattermost-channel (hash-ref options 'mattermost-channel)))
+     (when help
+       (getopt-display-help gopt "sncf")
+       (exit 0))
+     (def sncf-key (getenv "SNCF_AUTH_KEY" #f))
+     (unless sncf-key
+       (display "No SNCF API authentication key found. Set the SNCF_AUTH_KEY environment variable.\n"
+		(current-error-port))
+       (exit 1))
      (let-values (((departures disruptions) (get-departures sncf-key)))
        (display-departures-table departures)
        (display-disruptions disruptions)
