@@ -2,7 +2,7 @@
 
 set -eux
 
-docker build . -t dlozeve/sncf
-CONTAINER_ID=$(docker run -d dlozeve/sncf)
+docker build . -t dlozeve/sncf-bot
+CONTAINER_ID=$(docker run -d dlozeve/sncf-bot)
 docker cp "$CONTAINER_ID":/src/sncf .
 docker rm -f "$CONTAINER_ID"

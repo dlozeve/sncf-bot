@@ -1,0 +1,44 @@
+* SNCF Bot
+
+** Usage
+
+Get an access to the [[https://www.digital.sncf.com/startup/api][SNCF API]]. By creating an account, you should
+receive an email with your authentication key.
+
+You can now call the program with the authentication key as the first
+argument.
+
+#+begin_src sh
+$ sncf <sncf-key>
+┌────────────┬────────────────────────────────┬───────────────┐
+│ Réseau     │ Direction                      │ Heure         │
+├────────────┼────────────────────────────────┼───────────────┤
+│ TRANSILIEN │ Paris Saint-Lazare (Paris)     │ 08:41         │
+│ TER        │ Paris Saint-Lazare (Paris)     │ 08:54         │
+│ TER        │ Rouen Rive Droite (Rouen)      │ 09:07         │
+│ TRANSILIEN │ Paris Saint-Lazare (Paris)     │ 09:41         │
+│ TER        │ Paris Saint-Lazare (Paris)     │ 09:55         │
+│ TER        │ Paris Saint-Lazare (Paris)     │ 10:58         │
+│ TER        │ Rouen Rive Droite (Rouen)      │ 11:05         │
+│ TRANSILIEN │ Paris Saint-Lazare (Paris)     │ 11:37         │
+│ TER        │ Paris Saint-Lazare (Paris)     │ 12:56         │
+│ TER        │ Rouen Rive Droite (Rouen)      │ 13:06         │
+└────────────┴────────────────────────────────┴───────────────┘
+#+end_src
+
+If you want to publish to [[https://mattermost.com/][Mattermost]], create an [[https://developers.mattermost.com/integrate/webhooks/incoming/][incoming webhook]] by
+going to *Product menu* (top left) → *Integrations* → *Incoming
+webhooks*.
+
+Use the ~--mattermost-url~ option to set the webhook URL and post to
+Mattermost. Optionally, you can override the default channel of the
+webhook with ~--channel~.
+
+** Building instructions
+
+The build script will use Docker to build a fully static executable.
+The Dockerfile is based on the [[https://hub.docker.com/r/gerbil/alpine][gerbil/alpine]] image.
+
+#+begin_src sh
+$ ./build.sh
+#+end_src
