@@ -7,19 +7,22 @@
 	:std/iter
 	:std/misc/string
 	:std/net/request
+	:std/net/uri
 	:std/srfi/19
 	:std/sugar
 	:std/text/json
 	:dlozeve/fancy/table)
 
-(def +sncf-url+ "https://api.sncf.com/v1/coverage/sncf/stop_areas/stop_area:SNCF:87415604/departures")
+(def +sncf-url+ "https://api.sncf.com/v1/coverage/sncf")
 
 (def (main . args)
-  (def gopt (getopt (flag 'help "-h" "--help" help: "Display this help.")
+  (def gopt (getopt (optional-argument 'station help: "Name of the station (default Vernon-Giverny).")
+		    (flag 'help "-h" "--help" help: "Display this help.")
 		    (option 'mattermost-url "--mattermost-url" help: "Mattermost incoming webhook URL.")
 		    (option 'mattermost-channel "--channel" help: "Mattermost channel.")))
   (try
    (let* ((options (getopt-parse gopt args))
+	  (station (hash-ref options 'station))
 	  (help (hash-ref options 'help #f))
 	  (mattermost-url (hash-ref options 'mattermost-url))
 	  (mattermost-channel (hash-ref options 'mattermost-channel)))
@@ -31,7 +34,12 @@
        (display "No SNCF API authentication key found. Set the SNCF_AUTH_KEY environment variable.\n"
 		(current-error-port))
        (exit 1))
-     (let-values (((departures disruptions) (get-departures sncf-key)))
+     (define-values (station-name station-id)
+       (if station
+	 (get-station-id sncf-key station)
+	 (values "Vernon - Giverny (Vernon)" "stop_area:SNCF:87415604")))
+     (let-values (((departures disruptions) (get-departures sncf-key station-id)))
+       (displayln (str "Station : " station-name))
        (display-departures-table departures)
        (display-disruptions disruptions)
        (when mattermost-url
@@ -46,8 +54,23 @@
      (display (error-message exn) (current-error-port))
      (exit 1))))
 
-(def (get-departures sncf-key)
-  (def req (http-get +sncf-url+ headers: `(("Authorization" . ,sncf-key))))
+(def (get-station-id sncf-key station)
+  (def url (format "~a/pt_objects?q=~a&type\\[\\]=stop_area" +sncf-url+ (uri-encode station)))
+  (def req (http-get url headers: `(("Authorization" . ,sncf-key))))
+  (if (eq? 200 (request-status req))
+    (let (req-json (request-json req))
+      (let ((pts (hash-ref req-json 'pt_objects #f)))
+	(if (and pts (not (null? pts)))
+	  (values (hash-ref (car pts) 'name) (hash-ref (car pts) 'id))
+	  (begin (display (format "No station found for \"~a\".\n" station) (current-error-port))
+		 (exit 1)))))
+    (begin (display (format "Failed to query the SNCF API: ~a ~a\n"
+			    (request-status req) (request-status-text req)))
+	   (exit 1))))
+
+(def (get-departures sncf-key station-id)
+  (def url (format "~a/stop_areas/~a/departures" +sncf-url+ station-id))
+  (def req (http-get url headers: `(("Authorization" . ,sncf-key))))
   (if (eq? 200 (request-status req))
     (let (req-json (request-json req))
       (values (hash-ref req-json 'departures)
@@ -59,7 +82,7 @@
 (def (display-departures-table departures style: (style 'unicode))
   (def good-emoji (if (eq? style 'markdown) ":white_check_mark: " ""))
   (def bad-emoji (if (eq? style 'markdown) ":warning:          " ""))
-  (def tab (table '("Réseau" "Direction" "Heure") [10 30 (if (eq? style 'markdown) 32 13)] style))
+  (def tab (table '("Réseau" "Direction" "Heure") [15 60 (if (eq? style 'markdown) 32 13)] style))
   (display (table-header tab))
   (for ((dep departures))
     (let* ((info (hash-ref dep (string->symbol "display_informations")))
