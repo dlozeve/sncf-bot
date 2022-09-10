@@ -11,6 +11,7 @@
 	:std/srfi/19
 	:std/sugar
 	:std/text/json
+	:dlozeve/fancy/format
 	:dlozeve/fancy/table)
 
 (def +sncf-url+ "https://api.sncf.com/v1/coverage/sncf")
@@ -39,11 +40,12 @@
 	 (get-station-id sncf-key station)
 	 (values "Vernon - Giverny (Vernon)" "stop_area:SNCF:87415604")))
      (let-values (((departures disruptions) (get-departures sncf-key station-id)))
-       (displayln (str "Prochains départs de " station-name))
+       (displayln (parse-markup (format "[bold]Prochains départs de [green]~a[/green] :" station-name)))
        (display-departures-table departures)
        (display-disruptions disruptions)
        (when mattermost-url
 	 (let ((tab-str-md (with-output-to-string (lambda ()
+						    (displayln (format "Prochains départs de **~a** :" station-name))
 						    (display-departures-table departures style: 'markdown)
 						    (display-disruptions disruptions style: 'markdown)))))
 	   (post-to-mattermost mattermost-url tab-str-md channel: mattermost-channel)))))
@@ -103,9 +105,12 @@
 
 (def (display-departures-table departures style: (style 'unicode))
   (def good-emoji (if (eq? style 'markdown) ":white_check_mark: " ""))
-  (def bad-emoji (if (eq? style 'markdown) ":warning:          " ""))
+  (def bad-emoji (if (eq? style 'markdown) ":warning:          " "[yellow]"))
   (def widths (compute-table-widths departures))
-  (def tab (table '("Réseau" "Direction" "Heure") [(map max '(5 9) widths) ... (if (eq? style 'markdown) 32 13)] style))
+  (def headers (if (eq? style 'markdown)
+		 '("Réseau" "Direction" "Heure")
+		 '("[bold]Réseau" "[bold]Direction" "[bold]Heure")))
+  (def tab (table headers [(map max '(5 9) widths) ... (if (eq? style 'markdown) 32 13)] style))
   (display (table-header tab))
   (for ((dep departures))
     (with ((departure network direction base-dep-dt dep-dt) dep)
@@ -119,15 +124,11 @@
 
 (def (display-disruptions disruptions style: (style 'unicode))
   (unless (null? disruptions)
-    (displayln "Perturbations :"))
+    (displayln (if (eq? style 'markdown) "**Perturbations :**" (parse-markup "[bold]Perturbations :"))))
   (for ((dis disruptions))
     (let ((messages (hash-ref dis 'messages '())))
-      (if (eq? style 'markdown)
-	(display "* ")
-	(display "• "))
-      (if (null? messages)
-	(displayln "[Pas de message]")
-	(displayln (hash-ref (car messages) 'text))))))
+      (display (if (eq? style 'markdown) "* " "• "))
+      (displayln (if (null? messages) "[Pas de message]" (hash-ref (car messages) 'text))))))
 
 (def (post-to-mattermost url text channel: (channel #f))
   (def data (list->hash-table `((text . ,text))))
