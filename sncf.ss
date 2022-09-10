@@ -39,8 +39,7 @@
 	 (get-station-id sncf-key station)
 	 (values "Vernon - Giverny (Vernon)" "stop_area:SNCF:87415604")))
      (let-values (((departures disruptions) (get-departures sncf-key station-id)))
-       (displayln (compute-table-widths departures))
-       (displayln (str "Station : " station-name))
+       (displayln (str "Prochains départs de " station-name))
        (display-departures-table departures)
        (display-disruptions disruptions)
        (when mattermost-url
