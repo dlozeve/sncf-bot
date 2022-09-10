@@ -73,11 +73,26 @@
   (def req (http-get url headers: `(("Authorization" . ,sncf-key))))
   (if (eq? 200 (request-status req))
     (let (req-json (request-json req))
-      (values (hash-ref req-json 'departures)
+      (values (parse-departures (hash-ref req-json 'departures))
 	      (hash-ref req-json 'disruptions)))
     (begin (display (format "Failed to query the SNCF API: ~a ~a\n"
 			    (request-status req) (request-status-text req)))
 	   (exit 1))))
+
+(defstruct departure (network direction base-datetime datetime))
+
+(def (parse-departures departures-json)
+  (for/collect ((dep departures-json))
+    (let* ((info (hash-ref dep (string->symbol "display_informations")))
+	   (stop-dt (hash-ref dep (string->symbol "stop_date_time")))
+	   (base-dep-dt-str (hash-ref stop-dt (string->symbol "base_departure_date_time")))
+	   (base-dep-dt (string->date base-dep-dt-str "~Y~m~dT~H~M~S"))
+	   (dep-dt-str (hash-ref stop-dt (string->symbol "departure_date_time")))
+	   (dep-dt (string->date dep-dt-str "~Y~m~dT~H~M~S")))
+      (departure (hash-ref info 'network)
+		 (hash-ref info 'direction)
+		 base-dep-dt
+		 dep-dt))))
 
 (def (display-departures-table departures style: (style 'unicode))
   (def good-emoji (if (eq? style 'markdown) ":white_check_mark: " ""))
@@ -85,21 +100,13 @@
   (def tab (table '("Réseau" "Direction" "Heure") [15 60 (if (eq? style 'markdown) 32 13)] style))
   (display (table-header tab))
   (for ((dep departures))
-    (let* ((info (hash-ref dep (string->symbol "display_informations")))
-	   (stop-dt (hash-ref dep (string->symbol "stop_date_time")))
-	   (base-dep-dt-str (hash-ref stop-dt (string->symbol "base_departure_date_time")))
-	   (base-dep-dt (string->date base-dep-dt-str "~Y~m~dT~H~M~S"))
-	   (dep-dt-str (hash-ref stop-dt (string->symbol "departure_date_time")))
-	   (dep-dt (string->date dep-dt-str "~Y~m~dT~H~M~S"))
-	   (hour-str (if (equal? dep-dt base-dep-dt)
-		       (str good-emoji (date->string dep-dt "~H:~M"))
-		       (str bad-emoji (format "~a → ~a"
-					      (date->string base-dep-dt "~H:~M")
-					      (date->string dep-dt "~H:~M"))))))
-      (display (table-row tab
-			  (hash-ref info 'network)
-			  (hash-ref info 'direction)
-			  hour-str))))
+    (with ((departure network direction base-dep-dt dep-dt) dep)
+      (let* ((hour-str (if (equal? dep-dt base-dep-dt)
+			 (str good-emoji (date->string dep-dt "~H:~M"))
+			 (str bad-emoji (format "~a → ~a"
+						(date->string base-dep-dt "~H:~M")
+						(date->string dep-dt "~H:~M"))))))
+	(display (table-row tab network direction hour-str)))))
   (display (table-footer tab)))
 
 (def (display-disruptions disruptions style: (style 'unicode))
