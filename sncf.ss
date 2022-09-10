@@ -39,6 +39,7 @@
 	 (get-station-id sncf-key station)
 	 (values "Vernon - Giverny (Vernon)" "stop_area:SNCF:87415604")))
      (let-values (((departures disruptions) (get-departures sncf-key station-id)))
+       (displayln (compute-table-widths departures))
        (displayln (str "Station : " station-name))
        (display-departures-table departures)
        (display-disruptions disruptions)
@@ -94,10 +95,18 @@
 		 base-dep-dt
 		 dep-dt))))
 
+(def (compute-table-widths departures)
+  (def widths
+    (for/collect ((dep departures))
+      (with ((departure network direction _ _) dep)
+	(list (string-length network) (string-length direction)))))
+  (apply map max widths))
+
 (def (display-departures-table departures style: (style 'unicode))
   (def good-emoji (if (eq? style 'markdown) ":white_check_mark: " ""))
   (def bad-emoji (if (eq? style 'markdown) ":warning:          " ""))
-  (def tab (table '("Réseau" "Direction" "Heure") [15 60 (if (eq? style 'markdown) 32 13)] style))
+  (def widths (compute-table-widths departures))
+  (def tab (table '("Réseau" "Direction" "Heure") [(map max '(5 9) widths) ... (if (eq? style 'markdown) 32 13)] style))
   (display (table-header tab))
   (for ((dep departures))
     (with ((departure network direction base-dep-dt dep-dt) dep)
