@@ -1,5 +1,7 @@
 * SNCF Bot
 
+Display the next departures at any SNCF train station.
+
 ** Usage
 
 Get an access to the [[https://www.digital.sncf.com/startup/api][SNCF API]]. By creating an account, you should
@@ -10,22 +12,31 @@ environment variable.
 
 #+begin_src sh
 $ export SNCF_AUTH_KEY=<sncf-key>
-$ sncf
-┌────────────┬────────────────────────────────┬───────────────┐
-│ Réseau     │ Direction                      │ Heure         │
-├────────────┼────────────────────────────────┼───────────────┤
-│ TRANSILIEN │ Paris Saint-Lazare (Paris)     │ 08:41         │
-│ TER        │ Paris Saint-Lazare (Paris)     │ 08:54         │
-│ TER        │ Rouen Rive Droite (Rouen)      │ 09:07         │
-│ TRANSILIEN │ Paris Saint-Lazare (Paris)     │ 09:41         │
-│ TER        │ Paris Saint-Lazare (Paris)     │ 09:55         │
-│ TER        │ Paris Saint-Lazare (Paris)     │ 10:58         │
-│ TER        │ Rouen Rive Droite (Rouen)      │ 11:05         │
-│ TRANSILIEN │ Paris Saint-Lazare (Paris)     │ 11:37         │
-│ TER        │ Paris Saint-Lazare (Paris)     │ 12:56         │
-│ TER        │ Rouen Rive Droite (Rouen)      │ 13:06         │
-└────────────┴────────────────────────────────┴───────────────┘
+$ sncf vernon
+Prochains départs de Vernon - Giverny (Vernon) :
+┌────────┬────────────────────────────┬───────────────┐
+│ Réseau │ Direction                  │ Heure         │
+├────────┼────────────────────────────┼───────────────┤
+│ TER    │ Rouen Rive Droite (Rouen)  │ 12:05         │
+│ TER    │ Paris Saint-Lazare (Paris) │ 12:53         │
+│ TER    │ Rouen Rive Droite (Rouen)  │ 13:11         │
+│ TER    │ Paris Saint-Lazare (Paris) │ 13:56         │
+│ TER    │ Paris Saint-Lazare (Paris) │ 14:52         │
+│ TER    │ Rouen Rive Droite (Rouen)  │ 15:11         │
+│ TER    │ Paris Saint-Lazare (Paris) │ 16:52         │
+│ TER    │ Rouen Rive Droite (Rouen)  │ 17:11         │
+│ TER    │ Paris Saint-Lazare (Paris) │ 17:56         │
+│ TER    │ Rouen Rive Droite (Rouen)  │ 18:04         │
+└────────┴────────────────────────────┴───────────────┘
 #+end_src
+
+If there are disruptions, the program will display the scheduled and
+actual (estimated) times of departure, along with the associated
+messages and explanations.
+
+You can choose the train station with the first argument. The
+(optional) second argument accepts an ISO 8601-formatted date and
+time: the program will show departures after this time.
 
 If you want to publish to [[https://mattermost.com/][Mattermost]], create an [[https://developers.mattermost.com/integrate/webhooks/incoming/][incoming webhook]] by
 going to *Product menu* (top left) → *Integrations* → *Incoming
@@ -35,6 +46,20 @@ Use the ~--mattermost-url~ option to set the webhook URL and post to
 Mattermost. Optionally, you can override the default channel of the
 webhook with ~--channel~.
 
+#+begin_src
+$ sncf -h
+Usage: sncf [option ...] [<station>] [<datetime>]
+
+Options:
+ -h --help                        Display this help.
+ --mattermost-url  <mattermost-url>  Mattermost incoming webhook URL. [default: #f]
+ --channel  <mattermost-channel>  Mattermost channel. [default: #f]
+
+Arguments:
+ station:                         Name of the station (default Vernon-Giverny). [default: #f]
+ datetime:                        Date and time (ISO 8601 format). [default: #f]
+#+end_src
+
 ** Building instructions
 
 The build script will use Docker to build a fully static executable.
@@ -43,3 +68,5 @@ The Dockerfile is based on the [[https://hub.docker.com/r/gerbil/alpine][gerbil/
 #+begin_src sh
 $ ./build.sh
 #+end_src
+
+This project depends on [[https://github.com/dlozeve/fancy][dlozeve/fancy]].
