@@ -62,11 +62,25 @@ Arguments:
 
 ** Building instructions
 
+*** Static executable using Docker
+
 The build script will use Docker to build a fully static executable.
 The Dockerfile is based on the [[https://hub.docker.com/r/gerbil/alpine][gerbil/alpine]] image.
 
 #+begin_src sh
-$ ./build.sh
+./build.sh
 #+end_src
 
-This project depends on [[https://github.com/dlozeve/fancy][dlozeve/fancy]].
+*** With your local [[https://cons.io/][Gerbil]] installation
+
+This project depends on [[https://github.com/dlozeve/fancy][dlozeve/fancy]]. Install it with the package
+manager:
+#+begin_src sh
+gxpkg install github.com/dlozeve/fancy
+#+end_src
+
+The project comes with a build script for the [[https://cons.io/guide/build.html][standard build tool]],
+which installs the =sncf= executable in =$GERBIL_HOME/bin=:
+#+begin_src sh
+./build.ss
+#+end_src
