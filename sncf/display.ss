@@ -1,5 +1,6 @@
 (export display-departures-table
-	display-disruptions)
+	display-disruptions
+	display-all)
 
 (import :std/format
 	:std/iter
@@ -42,3 +43,17 @@
     (let ((messages (hash-ref dis 'messages '())))
       (display (if (eq? style 'markdown) "* " "• "))
       (displayln (if (null? messages) "[Pas de message]" (hash-ref (car messages) 'text))))))
+
+(def (display-all departures disruptions station-name (datetime #f) style: (style 'unicode))
+  (display
+   (if (eq? style 'markdown)
+     (format "Prochains départs de **~a** " station-name)
+     (parse-markup
+      (format "[bold]Prochains départs de [green]~a[/green] " station-name))))
+  (when datetime
+    (display (format "le ~a à ~a :"
+		     (date->string datetime "~a ~d ~b ~Y")
+		     (date->string datetime "~H:~M"))))
+  (displayln (if (eq? style 'markdown) ":\n" ":"))
+  (display-departures-table departures style: style)
+  (display-disruptions disruptions style: style))

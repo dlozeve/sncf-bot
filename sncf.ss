@@ -38,26 +38,10 @@
 	 (get-station-id sncf-key station)
 	 (values "Vernon - Giverny (Vernon)" "stop_area:SNCF:87415604")))
      (let-values (((departures disruptions) (get-departures sncf-key station-id datetime)))
-       (display (parse-markup
-		 (format "[bold]Prochains départs de [green]~a[/green] " station-name)))
-       (displayln (if datetime
-		    (parse-markup (format "le ~a à ~a :"
-					  (date->string datetime "~a ~d ~b ~Y")
-					  (date->string datetime "~H:~M")))
-		    ":"))
-       (display-departures-table departures)
-       (display-disruptions disruptions)
+       (display-all departures disruptions station-name datetime)
        (when mattermost-url
-	 (let ((tab-str-md (with-output-to-string
-			     (lambda ()
-			       (display (format "Prochains départs de **~a** " station-name))
-			       (displayln (if datetime
-					    (parse-markup (format "le ~a à ~a :\n"
-								  (date->string datetime "~a ~d ~b ~Y")
-								  (date->string datetime "~H:~M")))
-					    ":\n"))
-			       (display-departures-table departures style: 'markdown)
-			       (display-disruptions disruptions style: 'markdown)))))
+	 (let ((tab-str-md
+		(with-output-to-string (lambda () (display-all departures disruptions station-name datetime)))))
 	   (post-to-mattermost mattermost-url tab-str-md channel: mattermost-channel)))))
    (catch (getopt-error? exn)
      (getopt-display-help exn "sncf" (current-error-port))
