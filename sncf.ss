@@ -57,10 +57,10 @@
 			     (lambda ()
 			       (display (format "Prochains départs de **~a** " station-name))
 			       (displayln (if datetime
-					    (parse-markup (format "le ~a à ~a :"
+					    (parse-markup (format "le ~a à ~a :\n"
 								  (date->string datetime "~a ~d ~b ~Y")
 								  (date->string datetime "~H:~M")))
-					    ":"))
+					    ":\n"))
 			       (display-departures-table departures style: 'markdown)
 			       (display-disruptions disruptions style: 'markdown)))))
 	   (post-to-mattermost mattermost-url tab-str-md channel: mattermost-channel)))))
