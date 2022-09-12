@@ -64,8 +64,9 @@ Arguments:
 
 *** Static executable using Docker
 
-The build script will use Docker to build a fully static executable.
-The Dockerfile is based on the [[https://hub.docker.com/r/gerbil/alpine][gerbil/alpine]] image.
+The build script will use Docker to build a fully static executable
+=sncf-static= in the current directory.  The Dockerfile is based on
+the [[https://hub.docker.com/r/gerbil/alpine][gerbil/alpine]] image.
 
 #+begin_src sh
 ./build.sh
