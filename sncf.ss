@@ -24,7 +24,8 @@
   (display-all departures disruptions station-name datetime)
   (when mattermost-url
     (let ((tab-str-md
-	   (with-output-to-string (lambda () (display-all departures disruptions station-name datetime)))))
+	   (with-output-to-string
+	     (lambda () (display-all departures disruptions station-name datetime style: 'markdown)))))
       (post-to-mattermost mattermost-url tab-str-md channel: mattermost-channel))))
 
 (def (parse-arguments args)
