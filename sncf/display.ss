@@ -51,8 +51,8 @@
      (parse-markup
       (format "[bold]Prochains départs de [green]~a[/green] " station-name))))
   (when datetime
-    (display (format "le ~a à ~a :"
-		     (date->string datetime "~a ~d ~b ~Y")
+    (display (format "le ~a à ~a "
+		     (date->string datetime "~d ~b ~Y")
 		     (date->string datetime "~H:~M"))))
   (displayln (if (eq? style 'markdown) ":\n" ":"))
   (display-departures-table departures style: style)
