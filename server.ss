@@ -36,6 +36,9 @@
     (display "No SNCF API authentication key found. Set the SNCF_AUTH_KEY environment variable.\n"
 	     (current-error-port))
     (exit 1))
+  (def headers (http-request-headers req))
+  (def accept-header (assoc "Accept" headers))
+  (when accept-header (set! accept-header (cdr accept-header)))
   (def params (parse-request-params (http-request-params req)))
   (def station (assoc "station" params))
   (when station (set! station (cdr station)))
@@ -43,16 +46,27 @@
   (def datetime (if datetime-str
 		  (string->date (cdr datetime-str) "~Y~m~dT~H~M~S")
 		  #f))
-  (def style (if (assoc "markdown" params) 'markdown 'unicode))
   (define-values (station-name station-id)
     (if station
       (get-station-id sncf-key station)
       (values "Vernon - Giverny (Vernon)" "stop_area:SNCF:87415604")))
   (define-values (departures disruptions) (get-departures sncf-key station-id datetime))
-  (http-response-write res 200 '(("Content-Type" . "text/plain"))
-		       (with-output-to-string
-			 (lambda () (display-all departures disruptions station-name datetime
-					    style: style)))))
+  (def content
+    (cond
+     ((or (assoc "markdown" params) (string-prefix? "text/markdown" accept-header))
+      (with-output-to-string
+	(lambda () (display-all departures disruptions station-name datetime
+			   style: 'markdown))))
+     ((string-prefix? "text/html" accept-header) ; TODO
+      (with-output-to-string
+	(lambda () (display-all departures disruptions station-name datetime
+			   style: 'markdown))))
+     (#t
+      (with-output-to-string
+	(lambda () (display-all departures disruptions station-name datetime
+			   style: 'unicode))))))
+  (http-response-write res 200 '(("Content-Type" . "text/plain; charset=utf-8"))
+		       content))
 
 (def (parse-request-params params)
   (if params
