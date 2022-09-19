@@ -1,6 +1,6 @@
-# fly.toml file generated for sncf-bot on 2022-09-19T19:20:26+02:00
+# fly.toml file generated for sncf on 2022-09-19T22:02:14+02:00
 
-app = "sncf-bot"
+app = "sncf"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
@@ -23,7 +23,7 @@ processes = []
     type = "connections"
 
   [[services.ports]]
-    force_https = true
+    force_https = false
     handlers = ["http"]
     port = 80
 
