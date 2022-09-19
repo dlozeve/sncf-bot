@@ -11,6 +11,9 @@
 (def bin-build-spec
   '((exe: "sncf")))
 
+(def server-build-spec
+  '((exe: "server")))
+
 (def srcdir
   (path-normalize (path-directory (this-source-file))))
 
@@ -29,6 +32,14 @@
            static: #t
 	   build-deps: "build-deps-bin"
            bin-build-spec))
+    (["server"]
+     (make srcdir: srcdir
+	   bindir: srcdir
+           optimize: #t
+           debug: #f
+           static: #t
+	   build-deps: "build-deps-server"
+           server-build-spec))
     ([]
      (main "lib")
      (main "bin"))))
