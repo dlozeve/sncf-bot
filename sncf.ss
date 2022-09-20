@@ -20,6 +20,10 @@
     (if station
       (get-station-id sncf-key station)
       (values "Vernon - Giverny (Vernon)" "stop_area:SNCF:87415604")))
+  (unless station-name
+    (set! station-name "Vernon - Giverny"))
+  (unless station-id
+    (set! station-id "stop_area:SNCF:87415604"))
   (define-values (departures disruptions) (get-departures sncf-key station-id datetime))
   (display-all departures disruptions station-name datetime)
   (when mattermost-url

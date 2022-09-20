@@ -38,10 +38,6 @@
 ;; /
 (def (departures-handler req res)
   (let/cc return
-    (infof "~a ~a ~a"
-	   (http-request-method req)
-	   (http-request-path req)
-	   (inet-address->string (http-request-client req)))
     (def sncf-key (getenv "SNCF_AUTH_KEY" #f))
     (unless sncf-key
       (errorf "No SNCF API authentication key found. Set the SNCF_AUTH_KEY environment variable.")
@@ -52,8 +48,6 @@
     (def accept-header (assoc "Accept" headers))
     (when accept-header (set! accept-header (cdr accept-header)))
     (def params (parse-request-params (http-request-params req)))
-    (def station (assoc "station" params))
-    (when station (set! station (cdr station)))
     (def datetime-str (assoc "datetime" params))
     (def datetime (if datetime-str
 		    (try
@@ -65,10 +59,23 @@
 						    (cdr datetime-str)))
 		       (return)))
 		    #f))
+    (def station (assoc "station" params))
+    (when station (set! station (cdr station)))
     (define-values (station-name station-id)
       (if (string? station)
 	(get-station-id sncf-key station)
 	(values "Vernon - Giverny (Vernon)" "stop_area:SNCF:87415604")))
+    (unless station-name
+      (set! station-name "Vernon - Giverny"))
+    (unless station-id
+      (set! station-id "stop_area:SNCF:87415604"))
+    (infof "~a ~a ~a ~a (\"~a\")~a"
+	   (inet-address->string (http-request-client req))
+	   (http-request-method req)
+	   (http-request-path req)
+	   station-name
+	   station
+	   (if datetime (string-append " at " (cdr datetime-str)) ""))
     (define-values (departures disruptions) (get-departures sncf-key station-id datetime))
     (def content
       (cond

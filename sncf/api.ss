@@ -4,6 +4,7 @@
 
 (import :std/format
 	:std/iter
+	:std/logger
 	:std/net/request
 	:std/net/uri
 	:std/srfi/19
@@ -19,11 +20,11 @@
       (let ((pts (hash-ref req-json 'pt_objects #f)))
 	(if (and pts (not (null? pts)))
 	  (values (hash-ref (car pts) 'name) (hash-ref (car pts) 'id))
-	  (begin (display (format "No station found for \"~a\".\n" station) (current-error-port))
-		 (exit 1)))))
-    (begin (display (format "Failed to query the SNCF API: ~a ~a\n"
-			    (request-status req) (request-status-text req)))
-	   (exit 1))))
+	  (begin (warnf  "No station found for \"~a\"." station)
+		 (values #f #f)))))
+    (begin (warnf "Failed to query the SNCF API: ~a ~a"
+		  (request-status req) (request-status-text req))
+	   (values #f #f))))
 
 (def (get-departures sncf-key station-id (datetime #f))
   (def url (format "~a/stop_areas/~a/departures" +sncf-url+ station-id))
@@ -35,9 +36,9 @@
     (let (req-json (request-json req))
       (values (parse-departures (hash-ref req-json 'departures))
 	      (hash-ref req-json 'disruptions)))
-    (begin (display (format "Failed to query the SNCF API: ~a ~a\n"
-			    (request-status req) (request-status-text req)))
-	   (exit 1))))
+    (begin (warnf "Failed to query the SNCF API: ~a ~a"
+		  (request-status req) (request-status-text req))
+	   (values #f #f))))
 
 (defstruct departure (network direction base-datetime datetime))
 
