@@ -45,22 +45,20 @@
 			   "Missing SNCF API authentication key\n")
       (return))
     (def headers (http-request-headers req))
-    (def accept-header (assoc "Accept" headers))
-    (when accept-header (set! accept-header (cdr accept-header)))
+    (def accept-header (assget "Accept" headers))
     (def params (parse-request-params (http-request-params req)))
-    (def datetime-str (assoc "datetime" params))
+    (def datetime-str (assget "datetime" params))
     (def datetime (if datetime-str
 		    (try
-		     (string->date (cdr datetime-str) "~Y~m~dT~H~M~S")
+		     (string->date datetime-str "~Y~m~dT~H~M~S")
 		     (catch _
-		       (warnf "Badly formatted date string: ~a" (cdr datetime-str))
+		       (warnf "Badly formatted date string: ~a" datetime-str)
 		       (http-response-write res 400 '(("Content-Type" . "text/plain; charset=utf-8"))
 					    (format "Badly formatted date string, expected %Y%m%dT%H%M%S: ~a\n"
-						    (cdr datetime-str)))
+						    datetime-str))
 		       (return)))
 		    #f))
-    (def station (assoc "station" params))
-    (when station (set! station (cdr station)))
+    (def station (assget "station" params))
     (define-values (station-name station-id)
       (if (string? station)
 	(get-station-id sncf-key station)
@@ -75,7 +73,7 @@
 	   (http-request-path req)
 	   station-name
 	   station
-	   (if datetime (string-append " at " (cdr datetime-str)) ""))
+	   (if datetime (string-append " at " datetime-str) ""))
     (define-values (departures disruptions) (get-departures sncf-key station-id datetime))
     (def content
       (cond
