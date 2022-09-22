@@ -46,10 +46,10 @@
   (for/collect ((dep departures-json))
     (let* ((info (hash-ref dep (string->symbol "display_informations")))
 	   (stop-dt (hash-ref dep (string->symbol "stop_date_time")))
-	   (base-dep-dt-str (hash-ref stop-dt (string->symbol "base_departure_date_time")))
-	   (base-dep-dt (string->date base-dep-dt-str "~Y~m~dT~H~M~S"))
 	   (dep-dt-str (hash-ref stop-dt (string->symbol "departure_date_time")))
-	   (dep-dt (string->date dep-dt-str "~Y~m~dT~H~M~S")))
+	   (dep-dt (string->date dep-dt-str "~Y~m~dT~H~M~S"))
+	   (base-dep-dt-str (hash-ref stop-dt (string->symbol "base_departure_date_time") dep-dt-str))
+	   (base-dep-dt (string->date base-dep-dt-str "~Y~m~dT~H~M~S")))
       (departure (hash-ref info 'network)
 		 (hash-ref info 'direction)
 		 base-dep-dt
