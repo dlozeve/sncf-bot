@@ -46,10 +46,10 @@
 
 (def (display-all departures disruptions station-name (datetime #f) style: (style 'unicode))
   (let/cc return
-    (unless departures
+    (when (or (not departures) (null? departures))
       (displayln (format "Aucun départ prévu de ~a~a"
 			 station-name
-			 (if datetime (string-append " le " (date->string datetime "~d ~b ~Y")))))
+			 (if datetime (string-append " le " (date->string datetime "~d ~b ~Y")) "")))
       (return))
     (display
      (if (eq? style 'markdown)
