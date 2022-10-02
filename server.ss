@@ -50,7 +50,8 @@
       (return))
     (def headers (http-request-headers req))
     (def accept-header (assget "Accept" headers))
-    (def params (form-url-decode (http-request-params req)))
+    (def params (http-request-params req))
+    (set! params (if (string? params) (form-url-decode params) '()))
     (def datetime-str (assget "datetime" params))
     (def datetime (if datetime-str
 		    (try
