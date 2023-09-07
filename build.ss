@@ -23,13 +23,11 @@
      (make srcdir: srcdir
 	   optimize: #t
            debug: 'src
-           static: #t
            lib-build-spec))
     (["bin"]
      (make srcdir: srcdir
            optimize: #t
            debug: #f
-           static: #t
 	   build-deps: "build-deps-bin"
            bin-build-spec))
     (["server"]
@@ -37,7 +35,6 @@
 	   bindir: srcdir
            optimize: #t
            debug: #f
-           static: #t
 	   build-deps: "build-deps-server"
            server-build-spec))
     ([]
